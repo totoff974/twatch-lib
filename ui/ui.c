@@ -170,6 +170,7 @@ void IRAM_ATTR ui_process_events(void)
   tile_t *p_main_tile;
 
   /* Screen shutdown process */
+  twatch_rtc_get_date_time(&datetime);
   int current_event = datetime.second;
   if (twatch_pmu_is_userbtn_pressed() == true || current_event == (g_ui.last_event + 10) % 60)
   {
