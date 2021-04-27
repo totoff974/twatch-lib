@@ -1,6 +1,7 @@
 #include "ui/ui.h"
 #include "ui/widget.h"
 
+
 int ui_forward_event_to_widget(touch_event_type_t state, int x, int y, int velocity);
 
 /**
@@ -8,7 +9,7 @@ int ui_forward_event_to_widget(touch_event_type_t state, int x, int y, int veloc
  **/
 
 ui_t g_ui;
-
+rtc_datetime_t datetime;
 /**
  * @brief: Initialize main UI
  **/
@@ -25,6 +26,10 @@ void ui_init(void)
   g_ui.state = UI_STATE_IDLE;
   g_ui.p_from_tile = NULL;
   g_ui.p_to_tile = NULL;
+
+  /* time last event */
+  twatch_rtc_get_date_time(&datetime);
+  g_ui.last_event = datetime.second;
 }
 
 
@@ -164,6 +169,17 @@ void IRAM_ATTR ui_process_events(void)
   touch_event_t touch;
   tile_t *p_main_tile;
 
+  /* Screen shutdown process */
+  int current_event = datetime.second;
+  if (twatch_pmu_is_userbtn_pressed() == true || current_event == (g_ui.last_event + 10) % 60)
+  {
+    twatch_vibrate_vibrate(200);
+    twatch_pmu_screen_power(false);
+    
+    vTaskDelay(100);
+    twatch_pmu_deepsleep();
+  }
+
   /* Process touch events if we are not in an animation. */
   if (g_ui.state == UI_STATE_IDLE)
   {
@@ -239,7 +255,10 @@ void IRAM_ATTR ui_process_events(void)
       }
     }
   }
-
+  else {
+    /* No event, set time last event */
+    g_ui.last_event = datetime.second;
+  }
 
   /* Refresh screen. */
   st7789_blank();

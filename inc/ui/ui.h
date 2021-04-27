@@ -5,6 +5,9 @@
 #include "drivers/st7789.h"
 
 #include "hal/touch.h"
+#include "hal/pmu.h"
+#include "hal/vibrate.h"
+#include "hal/rtc.h"
 
 #include "img.h"
 #include "font/font16.h"
@@ -83,6 +86,8 @@ typedef struct {
   /* Pointer to current tile. */
   tile_t *p_current_tile;
 
+  /* time last event */
+  int last_event;
 } ui_t;
 
 
