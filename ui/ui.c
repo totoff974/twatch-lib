@@ -181,10 +181,10 @@ void IRAM_ATTR ui_process_events(void)
     twatch_pmu_deepsleep();
   }
 
-  /* Process touch events if we are not in an animation. */
-  if (g_ui.state == UI_STATE_IDLE)
+  if (twatch_get_touch_event(&touch, 1) == ESP_OK)
   {
-    if (twatch_get_touch_event(&touch, 1) == ESP_OK)
+    /* Process touch events if we are not in an animation. */
+    if (g_ui.state == UI_STATE_IDLE)
     {
       switch(touch.type)
       {
@@ -255,8 +255,6 @@ void IRAM_ATTR ui_process_events(void)
 
       }
     }
-  }
-  else {
     /* No event, set time last event */
     g_ui.last_event = datetime.second;
   }
