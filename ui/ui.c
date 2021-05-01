@@ -40,12 +40,33 @@ void ui_init(void)
 
 void ui_select_tile(tile_t *p_tile)
 {
+  if (g_ui.p_current_tile != NULL)
+  {
+    /* Send TE_ENTER to current tile. */
+    tile_send_event(
+      g_ui.p_current_tile,
+      TE_EXIT,
+      0,
+      0,
+      0
+    );
+  }
+
   /* Set current tile. */
   g_ui.p_current_tile = p_tile;
 
   /* Reset offsets in order to display this tile. */
   g_ui.p_current_tile->offset_x = 0;
   g_ui.p_current_tile->offset_y = 0;
+
+  /* Send TE_ENTER to current tile. */
+  tile_send_event(
+    g_ui.p_current_tile,
+    TE_ENTER,
+    0,
+    0,
+    0
+  );
 }
 
 
@@ -259,6 +280,20 @@ void IRAM_ATTR ui_process_events(void)
     g_ui.last_event = datetime.second;
   }
 
+  /* Has lateral button been short-pressed ? */
+  if (twatch_pmu_is_userbtn_pressed())
+  {
+    /* Forward event to the current tile. */
+    tile_send_event(
+      g_ui.p_current_tile,
+      TE_USERBTN,
+      0,
+      0,
+      0
+    );
+  }
+
+
   /* Refresh screen. */
   st7789_blank();
   switch(g_ui.state)
@@ -284,8 +319,26 @@ void IRAM_ATTR ui_process_events(void)
         /* Stop condition. */
         if (g_ui.p_to_tile->offset_x == 0)
         {
+          /* Send TE_EXIT to the previous tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_EXIT,
+            0,
+            0,
+            0
+          );
+
           g_ui.state = UI_STATE_IDLE;
           g_ui.p_current_tile = g_ui.p_to_tile;
+
+          /* Send TE_ENTER to current tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_ENTER,
+            0,
+            0,
+            0
+          );
         }
       }
       break;
@@ -303,8 +356,26 @@ void IRAM_ATTR ui_process_events(void)
         /* Stop condition. */
         if (g_ui.p_to_tile->offset_x == 0)
         {
+          /* Send TE_EXIT to the previous tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_EXIT,
+            0,
+            0,
+            0
+          );
+
           g_ui.state = UI_STATE_IDLE;
           g_ui.p_current_tile = g_ui.p_to_tile;
+          
+          /* Send TE_ENTER to current tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_ENTER,
+            0,
+            0,
+            0
+          );
         }
       }
       break;
@@ -322,8 +393,26 @@ void IRAM_ATTR ui_process_events(void)
         /* Stop condition. */
         if (g_ui.p_to_tile->offset_y == 0)
         {
+          /* Send TE_EXIT to the previous tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_EXIT,
+            0,
+            0,
+            0
+          );
+
           g_ui.state = UI_STATE_IDLE;
           g_ui.p_current_tile = g_ui.p_to_tile;
+
+          /* Send TE_ENTER to current tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_ENTER,
+            0,
+            0,
+            0
+          );
         }
       }
       break;
@@ -341,8 +430,26 @@ void IRAM_ATTR ui_process_events(void)
         /* Stop condition. */
         if (g_ui.p_to_tile->offset_y == 0)
         {
+          /* Send TE_EXIT to the previous tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_EXIT,
+            0,
+            0,
+            0
+          );
+
           g_ui.state = UI_STATE_IDLE;
           g_ui.p_current_tile = g_ui.p_to_tile;
+
+          /* Send TE_ENTER to current tile. */
+          tile_send_event(
+            g_ui.p_current_tile,
+            TE_ENTER,
+            0,
+            0,
+            0
+          );
         }
       }
       break;
@@ -401,6 +508,27 @@ int ui_forward_event_to_widget(touch_event_type_t state, int x, int y, int veloc
   return 1;
 }
 
+
+/**
+ * @brief Send a tile event to a tile.
+ * @param p_tile: pointer to a `tile_t` structure
+ * @param tile_event: tile event to send
+ * @param x: X-coordinate (for UI-related event)
+ * @param y: Y-coordinate (for UI-related event)
+ * @param velocity: Swipe velocity (for UI-related event)
+ * @return: TE_ERROR if event has not been processed, TE_PROCESSED otherwise
+ **/
+
+int tile_send_event(tile_t *p_tile, tile_event_t tile_event, int x, int y, int velocity)
+{
+  return p_tile->pfn_event_handler(
+    p_tile,
+    tile_event,
+    x,
+    y,
+    velocity
+  );
+}
 
 
 /**********************************************************************
@@ -597,6 +725,13 @@ int _tile_default_draw(tile_t *p_tile)
 }
 
 
+int _tile_default_event_handler(struct tile_t *p_tile, tile_event_t p_event, int x, int y, int velocity)
+{
+  /* Event not processed. */
+  return TE_ERROR;
+}
+
+
 /**
  * @brief Initialize a tile object.
  * @param p_tile: pointer to a  `tile_t` structure
@@ -618,6 +753,7 @@ void tile_init(tile_t *p_tile, void *p_user_data)
 
   /* Install our default callbacks. */
   p_tile->pfn_draw_tile = (FDrawTile)_tile_default_draw;
+  p_tile->pfn_event_handler = (FTileEventHandler)_tile_default_event_handler;
 }
 
 
@@ -631,6 +767,30 @@ void tile_set_drawfunc(tile_t *p_tile, FDrawTile pfn_drawfunc)
 {
   if ((p_tile != NULL) && (pfn_drawfunc != NULL))
     p_tile->pfn_draw_tile = pfn_drawfunc;
+}
+
+
+/**
+ * @brief: Set tile event handler function
+ * @param p_tile: pointer to a `tile_t` structure
+ * @param pfn_drawfunc: pointer to a FDrawTile function
+ **/
+
+FTileEventHandler tile_set_event_handler(tile_t *p_tile, FTileEventHandler pfn_event_handler)
+{
+  FTileEventHandler old_event_handler = NULL;
+
+  if ((p_tile != NULL) && (pfn_event_handler != NULL))
+  {
+    /* Save old event handler. */
+    old_event_handler = p_tile->pfn_event_handler;
+
+    /* Set new event handler. */
+    p_tile->pfn_event_handler = pfn_event_handler;
+  }
+
+  /* Return old event handler. */
+  return old_event_handler;
 }
 
 

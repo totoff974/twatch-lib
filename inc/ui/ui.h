@@ -17,6 +17,17 @@
 #define SCREEN_HEIGHT 240
 #define UI_ANIM_DELTA 40
 
+#define TE_ERROR      (1)
+#define TE_PROCESSED  (0)
+
+typedef enum {
+  TE_ENTER=0xF00,
+  TE_EXIT,
+  TE_USERBTN
+} tile_event_t;
+
+typedef int (*FTileEventHandler)(struct tile_t *p_tile, tile_event_t p_event, int x, int y, int velocity);
+
 typedef enum {
   UI_STATE_IDLE,
   UI_STATE_MOVE_LEFT,
@@ -69,6 +80,7 @@ typedef struct tTile {
    * this screen. Only the visible parts will be updated, depending on the offsets.
    **/
   FDrawTile pfn_draw_tile;
+  FTileEventHandler pfn_event_handler;
 
 } tile_t;
 
@@ -136,6 +148,10 @@ void tile_link_right(tile_t *p_tile, tile_t *p_right_tile);
 void tile_link_left(tile_t *p_tile, tile_t *p_left_tile);
 void tile_link_top(tile_t *p_tile, tile_t *p_top_tile);
 void tile_link_bottom(tile_t *p_tile, tile_t *p_bottom_tile);
+
+/* Events */
+FTileEventHandler tile_set_event_handler(tile_t *p_tile, FTileEventHandler pfn_event_handler);
+int tile_send_event(tile_t *p_tile, tile_event_t tile_event, int x, int y, int velocity);
 
 
 #endif /* __INC_TWATCH_UI_H */
