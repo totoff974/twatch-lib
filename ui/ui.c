@@ -838,7 +838,8 @@ int IRAM_ATTR tile_draw(tile_t *p_tile)
 void tile_link_right(tile_t *p_tile, tile_t *p_right_tile)
 {
   /* Sanity check. */
-  if ((p_tile == NULL) || (p_right_tile == NULL) || (p_right_tile->t_type != TILE_MAIN))
+  //if ((p_tile == NULL) || (p_right_tile == NULL) || (p_right_tile->t_type != TILE_MAIN))
+  if ((p_tile == NULL) || (p_right_tile == NULL))
     return;
 
   /* Link tiles. */
@@ -858,7 +859,8 @@ void tile_link_right(tile_t *p_tile, tile_t *p_right_tile)
 void tile_link_left(tile_t *p_tile, tile_t *p_left_tile)
 {
   /* Sanity check. */
-  if ((p_tile == NULL) || (p_left_tile == NULL)  || (p_left_tile->t_type != TILE_MAIN))
+  //if ((p_tile == NULL) || (p_left_tile == NULL)  || (p_left_tile->t_type != TILE_MAIN))
+  if ((p_tile == NULL) || (p_left_tile == NULL))
     return;
 
   /* Link tiles. */
@@ -886,7 +888,7 @@ void tile_link_top(tile_t *p_tile, tile_t *p_top_tile)
   p_top_tile->p_bottom = p_tile;
 
   /* Set tile as secondary. */
-  p_top_tile->t_type = TILE_SECONDARY;
+  //p_top_tile->t_type = TILE_SECONDARY;
 }
 
 
@@ -909,7 +911,7 @@ void tile_link_bottom(tile_t *p_tile, tile_t *p_bottom_tile)
   p_bottom_tile->p_top = p_tile;
 
   /* Set tile as secondary. */
-  p_bottom_tile->t_type = TILE_SECONDARY;
+  //p_bottom_tile->t_type = TILE_SECONDARY;
 }
 
 
